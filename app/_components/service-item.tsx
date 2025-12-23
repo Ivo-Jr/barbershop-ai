@@ -1,12 +1,15 @@
 import Image from "next/image";
 import { Button } from "./ui/button";
-import { BarbershopService } from "../generated/prisma/client";
+import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
+import { Barbershop, BarbershopService } from "../generated/prisma/client";
+import { BookingSheet } from "./booking-sheet";
 
 interface ServiceItemProps {
   service: BarbershopService;
+  barbershop: Barbershop;
 }
 
-const ServiceItem = ({ service }: ServiceItemProps) => {
+const ServiceItem = ({ service, barbershop }: ServiceItemProps) => {
   const formattedPrice = (service.priceInCents / 100).toLocaleString("pt-BR", {
     style: "currency",
     currency: "BRL",
@@ -35,9 +38,19 @@ const ServiceItem = ({ service }: ServiceItemProps) => {
           <p className="text-card-foreground text-sm font-bold">
             {formattedPrice}
           </p>
-          <Button className="h-auto rounded-full px-4 py-2 text-sm">
-            Reservar
-          </Button>
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button className="h-auto rounded-full px-4 py-2 text-sm">
+                Reservar
+              </Button>
+            </SheetTrigger>
+            <SheetContent
+              side="right"
+              className="w-min-[370px] overflow-y-auto p-0"
+            >
+              <BookingSheet service={service} barbershop={barbershop} />
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </div>
