@@ -11,23 +11,15 @@ import { ptBR } from "date-fns/locale";
 import { createBooking } from "../_actions/create-booking";
 import { useAction } from "next-safe-action/hooks";
 import { toast } from "sonner";
+import { generateTimeSlots } from "@/lib/utils";
+import { getDateAvailableTimeSlots } from "../_actions/get-date-available-time-slots";
+import { useQuery } from "@tanstack/react-query";
 
 interface BookingSheetProps {
   service: BarbershopService;
   barbershop: Barbershop;
   onClose: () => void;
 }
-
-const generateTimeSlots = (): string[] => {
-  const slots: string[] = [];
-  for (let hour = 9; hour <= 18; hour++) {
-    slots.push(`${hour.toString().padStart(2, "0")}:00`);
-    if (hour < 18) {
-      slots.push(`${hour.toString().padStart(2, "0")}:30`);
-    }
-  }
-  return slots;
-};
 
 export function BookingSheet({
   service,
@@ -39,8 +31,21 @@ export function BookingSheet({
     undefined,
   );
   const { executeAsync, isPending } = useAction(createBooking);
+  const { data: availableTimeSlots } = useQuery({
+    queryKey: ["date-available-time-slots", barbershop.id, selectedDate],
+    queryFn: () =>
+      getDateAvailableTimeSlots({
+        barbershopId: barbershop.id,
+        date: selectedDate!,
+      }),
+    enabled: Boolean(selectedDate),
+  });
 
   const timeSlots = generateTimeSlots();
+
+  const handleDateSelect = (date: Date | undefined) => {
+    setSelectedDate(date);
+  };
 
   const formattedPrice = (service.priceInCents / 100).toLocaleString("pt-BR", {
     style: "currency",
@@ -91,7 +96,7 @@ export function BookingSheet({
         <Calendar
           mode="single"
           selected={selectedDate}
-          onSelect={setSelectedDate}
+          onSelect={handleDateSelect}
           disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
           locale={ptBR}
           className="w-full"
@@ -104,7 +109,7 @@ export function BookingSheet({
 
           {/* Time Slots */}
           <div className="flex gap-3 overflow-x-auto px-5 py-6 [&::-webkit-scrollbar]:hidden">
-            {timeSlots.map((time) => (
+            {availableTimeSlots?.data?.map((time) => (
               <Button
                 key={time}
                 variant={selectedTime === time ? "default" : "outline"}
