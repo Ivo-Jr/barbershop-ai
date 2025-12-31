@@ -8,10 +8,14 @@ import { SheetTitle } from "./ui/sheet";
 import { Barbershop, BarbershopService } from "../generated/prisma/client";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { createBooking } from "../_actions/create-booking";
+import { useAction } from "next-safe-action/hooks";
+import { toast } from "sonner";
 
 interface BookingSheetProps {
   service: BarbershopService;
   barbershop: Barbershop;
+  onClose: () => void;
 }
 
 const generateTimeSlots = (): string[] => {
@@ -25,11 +29,16 @@ const generateTimeSlots = (): string[] => {
   return slots;
 };
 
-export function BookingSheet({ service, barbershop }: BookingSheetProps) {
+export function BookingSheet({
+  service,
+  barbershop,
+  onClose,
+}: BookingSheetProps) {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string | undefined>(
     undefined,
   );
+  const { executeAsync, isPending } = useAction(createBooking);
 
   const timeSlots = generateTimeSlots();
 
@@ -42,9 +51,30 @@ export function BookingSheet({ service, barbershop }: BookingSheetProps) {
     ? format(selectedDate, "dd 'de' MMMM", { locale: ptBR })
     : "";
 
-  const handleConfirm = () => {
-    // Por enquanto, apenas fecha o Sheet
-    // A funcionalidade de salvar será implementada depois
+  const handleConfirm = async () => {
+    if (!selectedDate || !selectedTime) {
+      return;
+    }
+    const timeSplitted = selectedTime.split(":");
+    const hours = timeSplitted[0];
+    const minutes = timeSplitted[1];
+    const date = new Date(selectedDate);
+    date.setHours(Number(hours), Number(minutes));
+
+    const result = await executeAsync({
+      serviceId: service.id,
+      date,
+    });
+
+    if (result?.validationErrors || result?.serverError) {
+      toast.error(result.validationErrors?._errors?.[0]);
+      return;
+    }
+
+    toast.success("Agendamento criado com sucesso!");
+    setSelectedDate(undefined);
+    setSelectedTime(undefined);
+    onClose();
   };
 
   return (
@@ -120,7 +150,7 @@ export function BookingSheet({ service, barbershop }: BookingSheetProps) {
       <div className="mt-auto flex flex-col px-5 py-6">
         <Button
           onClick={handleConfirm}
-          disabled={!selectedDate || !selectedTime}
+          disabled={!selectedDate || !selectedTime || isPending}
           className="w-full rounded-full"
         >
           Confirmar

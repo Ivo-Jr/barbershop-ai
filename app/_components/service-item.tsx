@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Image from "next/image";
 import { Button } from "./ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
@@ -10,6 +13,8 @@ interface ServiceItemProps {
 }
 
 const ServiceItem = ({ service, barbershop }: ServiceItemProps) => {
+  const [sheetIsOpen, setSheetIsOpen] = useState(false);
+
   const formattedPrice = (service.priceInCents / 100).toLocaleString("pt-BR", {
     style: "currency",
     currency: "BRL",
@@ -38,7 +43,7 @@ const ServiceItem = ({ service, barbershop }: ServiceItemProps) => {
           <p className="text-card-foreground text-sm font-bold">
             {formattedPrice}
           </p>
-          <Sheet>
+          <Sheet open={sheetIsOpen} onOpenChange={setSheetIsOpen}>
             <SheetTrigger asChild>
               <Button className="h-auto rounded-full px-4 py-2 text-sm">
                 Reservar
@@ -48,7 +53,11 @@ const ServiceItem = ({ service, barbershop }: ServiceItemProps) => {
               side="right"
               className="w-min-[370px] overflow-y-auto p-0"
             >
-              <BookingSheet service={service} barbershop={barbershop} />
+              <BookingSheet
+                service={service}
+                barbershop={barbershop}
+                onClose={() => setSheetIsOpen(false)}
+              />
             </SheetContent>
           </Sheet>
         </div>
