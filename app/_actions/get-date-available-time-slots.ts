@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { generateTimeSlots } from "@/lib/utils";
 import { endOfDay, format, startOfDay } from "date-fns";
 import { returnValidationErrors } from "next-safe-action";
+import { headers } from "next/headers";
 import { z } from "zod";
 
 const inputSchema = z.object({
@@ -16,7 +17,9 @@ const inputSchema = z.object({
 export const getDateAvailableTimeSlots = actionClient
   .inputSchema(inputSchema)
   .action(async ({ parsedInput: { barbershopId, date } }) => {
-    const session = await auth.api.getSession();
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
 
     if (!session?.user) {
       return returnValidationErrors(inputSchema, {
