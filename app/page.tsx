@@ -12,8 +12,13 @@ import {
   PageSectionScroller,
   PageSectionTitle,
 } from "./_components/ui/page";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 export default async function Home() {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
   const recommendedBarbershops = await prisma.barbershop.findMany({
     orderBy: {
       name: "asc",
@@ -24,6 +29,24 @@ export default async function Home() {
       name: "desc",
     },
   });
+  const confirmedBooking = session?.user
+    ? await prisma.booking.findFirst({
+        where: {
+          userId: session.user.id,
+          date: {
+            gte: new Date(),
+          },
+          cancelled: false,
+        },
+        include: {
+          service: true,
+          barbershop: true,
+        },
+        orderBy: {
+          date: "asc",
+        },
+      })
+    : null;
 
   return (
     <main>
@@ -36,16 +59,12 @@ export default async function Home() {
           sizes="100vw"
           className="h-auto w-full"
         />
-        <PageSection>
-          <PageSectionTitle>Agendamentos</PageSectionTitle>
-          <BookingItem
-            serviceName="Corte de Cabelo"
-            barberShopName="Barbearia do João"
-            barberShopImageUrl="https://utfs.io/f/7e309eaa-d722-465b-b8b6-76217404a3d3-16s.png"
-            date={new Date()}
-          />
-        </PageSection>
-
+        {confirmedBooking && (
+          <PageSection>
+            <PageSectionTitle>Agendamentos</PageSectionTitle>
+            <BookingItem booking={confirmedBooking} />
+          </PageSection>
+        )}
         <PageSection>
           <PageSectionTitle>Recomendados</PageSectionTitle>
           <PageSectionScroller>

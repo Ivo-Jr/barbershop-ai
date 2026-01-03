@@ -29,6 +29,7 @@ export function SideMenu() {
 
   const handleLogout = async () => {
     await authClient.signOut();
+    router.refresh();
   };
 
   const handleNavigation = (path: string) => {
