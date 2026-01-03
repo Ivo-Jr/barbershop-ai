@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Button } from "./ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "./ui/sheet";
 import { Barbershop, BarbershopService } from "../generated/prisma/client";
 import { BookingSheet } from "./booking-sheet";
 
@@ -53,6 +53,7 @@ const ServiceItem = ({ service, barbershop }: ServiceItemProps) => {
               side="right"
               className="w-min-[370px] overflow-y-auto p-0"
             >
+              <SheetTitle className="sr-only">Fazer Reserva</SheetTitle>
               <BookingSheet
                 service={service}
                 barbershop={barbershop}
