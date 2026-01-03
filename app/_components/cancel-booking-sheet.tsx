@@ -9,6 +9,17 @@ import { Separator } from "./ui/separator";
 import { Badge } from "./ui/badge";
 import { Card } from "./ui/card";
 import { Avatar, AvatarImage } from "./ui/avatar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "./ui/alert-dialog";
 import PhoneItem from "./phone-item";
 import { cancelBooking } from "../_actions/cancel-booking";
 import { useAction } from "next-safe-action/hooks";
@@ -85,11 +96,11 @@ export function CancelBookingSheet({
             fill
             className="rounded-lg object-cover"
           />
-          <Card className="relative z-10 flex w-full items-center gap-3 p-3">
+          <Card className="relative z-10 flex w-[90%] flex-row items-center justify-center gap-3 p-3">
             <Avatar className="size-12">
               <AvatarImage src={booking.barbershop.imageUrl} />
             </Avatar>
-            <div className="flex flex-1 flex-col">
+            <div className="flex flex-col">
               <p className="text-base font-bold">{booking.barbershop.name}</p>
               <p className="text-muted-foreground overflow-hidden text-xs text-ellipsis whitespace-nowrap">
                 {booking.barbershop.address}
@@ -150,14 +161,40 @@ export function CancelBookingSheet({
         >
           Voltar
         </Button>
-        <Button
-          variant="destructive"
-          className="flex-1 rounded-full"
-          onClick={handleCancelBooking}
-          disabled={!isConfirmed || isPending}
-        >
-          Cancelar Reserva
-        </Button>
+        {status === "confirmed" && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="destructive"
+                className="flex-1 rounded-full"
+                disabled={!isConfirmed || isPending}
+              >
+                Cancelar Reserva
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Cancelar Reserva</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Tem certeza que deseja cancelar esta reserva? Esta ação não
+                  pode ser desfeita.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Voltar</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleCancelBooking}
+                  disabled={isPending}
+                  className={cn(
+                    "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+                  )}
+                >
+                  {isPending ? "Cancelando..." : "Confirmar"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
       </div>
     </div>
   );
