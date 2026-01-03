@@ -64,14 +64,7 @@ export default async function BookingsPage() {
             <PageSectionTitle>Confirmados</PageSectionTitle>
             <div className="space-y-3">
               {confirmedBookings.map((booking) => (
-                <BookingItem
-                  key={booking.id}
-                  serviceName={booking.service.name}
-                  barberShopName={booking.barbershop.name}
-                  barberShopImageUrl={booking.barbershop.imageUrl}
-                  date={booking.date}
-                  status="confirmed"
-                />
+                <BookingItem key={booking.id} booking={booking} />
               ))}
             </div>
           </PageSection>
@@ -82,14 +75,7 @@ export default async function BookingsPage() {
             <PageSectionTitle>Finalizados</PageSectionTitle>
             <div className="space-y-3">
               {finishedBookings.map((booking) => (
-                <BookingItem
-                  key={booking.id}
-                  serviceName={booking.service.name}
-                  barberShopName={booking.barbershop.name}
-                  barberShopImageUrl={booking.barbershop.imageUrl}
-                  date={booking.date}
-                  status="finished"
-                />
+                <BookingItem key={booking.id} booking={booking} />
               ))}
             </div>
           </PageSection>
