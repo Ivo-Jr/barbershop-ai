@@ -25,7 +25,11 @@ const BookingItem = ({ booking }: BookingItemProps) => {
 
   const now = new Date();
   const isConfirmed = booking.date > now && !booking.cancelled;
-  const status = isConfirmed ? "confirmed" : "finished";
+  const status = isConfirmed
+    ? "confirmado"
+    : booking.cancelled
+      ? "cancelado"
+      : "finalizado";
 
   return (
     <Sheet open={sheetIsOpen} onOpenChange={setSheetIsOpen}>
@@ -37,10 +41,12 @@ const BookingItem = ({ booking }: BookingItemProps) => {
                 "w-fit rounded-full border-transparent px-2 py-1.5 text-xs leading-none font-semibold tracking-tighter uppercase",
                 isConfirmed
                   ? "bg-primary/10 text-primary"
-                  : "bg-muted-foreground/10 text-muted-foreground",
+                  : booking.cancelled
+                    ? "bg-destructive/10 text-destructive"
+                    : "bg-muted-foreground/10 text-muted-foreground",
               )}
             >
-              {isConfirmed ? "Confirmado" : "Finalizado"}
+              {status}
             </Badge>
 
             <div className="flex flex-col gap-2.5">
