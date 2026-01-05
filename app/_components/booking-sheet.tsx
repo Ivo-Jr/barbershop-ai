@@ -11,9 +11,11 @@ import { ptBR } from "date-fns/locale";
 import { createBooking } from "../_actions/create-booking";
 import { useAction } from "next-safe-action/hooks";
 import { toast } from "sonner";
-import { generateTimeSlots } from "@/lib/utils";
+// import { generateTimeSlots } from "@/lib/utils";
 import { getDateAvailableTimeSlots } from "../_actions/get-date-available-time-slots";
 import { useQuery } from "@tanstack/react-query";
+import { createBookingCheckoutSession } from "../_actions/create-booking-checkout-session";
+import { loadStripe } from "@stripe/stripe-js";
 
 interface BookingSheetProps {
   service: BarbershopService;
@@ -31,6 +33,9 @@ export function BookingSheet({
     undefined,
   );
   const { executeAsync, isPending } = useAction(createBooking);
+  const { executeAsync: executeCreateBookingCheckoutSession } = useAction(
+    createBookingCheckoutSession,
+  );
   const { data: availableTimeSlots } = useQuery({
     queryKey: ["date-available-time-slots", barbershop.id, selectedDate],
     queryFn: () =>
@@ -41,7 +46,7 @@ export function BookingSheet({
     enabled: Boolean(selectedDate),
   });
 
-  const timeSlots = generateTimeSlots();
+  // const timeSlots = generateTimeSlots();
 
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDate(date);
@@ -57,29 +62,61 @@ export function BookingSheet({
     : "";
 
   const handleConfirm = async () => {
+    if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
+      toast.error("Erro ao carregar Stripe");
+      return;
+    }
+
     if (!selectedDate || !selectedTime) {
       return;
     }
+
     const timeSplitted = selectedTime.split(":");
     const hours = timeSplitted[0];
     const minutes = timeSplitted[1];
     const date = new Date(selectedDate);
     date.setHours(Number(hours), Number(minutes));
 
-    const result = await executeAsync({
+    const checkoutSessionResult = await executeCreateBookingCheckoutSession({
       serviceId: service.id,
       date,
     });
 
-    if (result?.validationErrors || result?.serverError) {
-      toast.error(result.validationErrors?._errors?.[0]);
+    if (
+      checkoutSessionResult?.validationErrors ||
+      checkoutSessionResult?.serverError
+    ) {
+      toast.error(checkoutSessionResult.validationErrors?._errors?.[0]);
       return;
     }
 
-    toast.success("Agendamento criado com sucesso!");
-    setSelectedDate(undefined);
-    setSelectedTime(undefined);
-    onClose();
+    const stripe = await loadStripe(
+      process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+    );
+
+    if (!stripe || !checkoutSessionResult.data?.id) {
+      toast.error("Erro ao carregar Stripe");
+      return;
+    }
+
+    await stripe.redirectToCheckout({
+      sessionId: checkoutSessionResult.data.id,
+    });
+
+    // const result = await executeAsync({
+    //   serviceId: service.id,
+    //   date,
+    // });
+
+    // if (result?.validationErrors || result?.serverError) {
+    //   toast.error(result.validationErrors?._errors?.[0]);
+    //   return;
+    // }
+
+    // toast.success("Agendamento criado com sucesso!");
+    // setSelectedDate(undefined);
+    // setSelectedTime(undefined);
+    // onClose();
   };
 
   return (
