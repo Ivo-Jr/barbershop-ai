@@ -29,12 +29,27 @@ export async function POST(request: Request) {
       return NextResponse.error();
     }
 
+    // Recuperar o payment_intent com o latest_charge expandido
+    let stripeChargeId: string | undefined;
+    if (session.payment_intent) {
+      const paymentIntent = await stripe.paymentIntents.retrieve(
+        session.payment_intent as string,
+        { expand: ["latest_charge"] },
+      );
+
+      stripeChargeId =
+        typeof paymentIntent.latest_charge === "string"
+          ? paymentIntent.latest_charge
+          : paymentIntent.latest_charge?.id;
+    }
+
     await prisma.booking.create({
       data: {
         date: new Date(date),
         serviceId,
         barbershopId,
         userId,
+        stripeChargeId,
       },
     });
   }

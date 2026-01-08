@@ -7,6 +7,7 @@ import { returnValidationErrors } from "next-safe-action";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
+import Stripe from "stripe";
 
 const inputSchema = z.object({
   bookingId: z.string(),
@@ -53,6 +54,28 @@ export const cancelBooking = actionClient
       return returnValidationErrors(inputSchema, {
         _errors: ["Não é possível cancelar reservas finalizadas"],
       });
+    }
+
+    // Processar estorno no Stripe se houver stripeChargeId
+    if (booking.stripeChargeId) {
+      if (!process.env.STRIPE_SECRET_KEY) {
+        return returnValidationErrors(inputSchema, {
+          _errors: ["Erro ao processar estorno: configuração inválida"],
+        });
+      }
+
+      try {
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+        await stripe.refunds.create({
+          charge: booking.stripeChargeId,
+          reason: "requested_by_customer",
+        });
+      } catch (error) {
+        console.error("Erro ao criar estorno no Stripe:", error);
+        return returnValidationErrors(inputSchema, {
+          _errors: ["Erro ao processar estorno. Tente novamente mais tarde."],
+        });
+      }
     }
 
     const updatedBooking = await prisma.booking.update({
