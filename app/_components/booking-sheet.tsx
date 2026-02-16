@@ -11,7 +11,6 @@ import { ptBR } from "date-fns/locale";
 import { createBooking } from "../_actions/create-booking";
 import { useAction } from "next-safe-action/hooks";
 import { toast } from "sonner";
-// import { generateTimeSlots } from "@/lib/utils";
 import { getDateAvailableTimeSlots } from "../_actions/get-date-available-time-slots";
 import { useQuery } from "@tanstack/react-query";
 import { createBookingCheckoutSession } from "../_actions/create-booking-checkout-session";
@@ -20,19 +19,14 @@ import { loadStripe } from "@stripe/stripe-js";
 interface BookingSheetProps {
   service: BarbershopService;
   barbershop: Barbershop;
-  onClose: () => void;
 }
 
-export function BookingSheet({
-  service,
-  barbershop,
-  onClose,
-}: BookingSheetProps) {
+export function BookingSheet({ service, barbershop }: BookingSheetProps) {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string | undefined>(
     undefined,
   );
-  const { executeAsync, isPending } = useAction(createBooking);
+  const { isPending } = useAction(createBooking);
   const { executeAsync: executeCreateBookingCheckoutSession } = useAction(
     createBookingCheckoutSession,
   );
@@ -45,8 +39,6 @@ export function BookingSheet({
       }),
     enabled: Boolean(selectedDate),
   });
-
-  // const timeSlots = generateTimeSlots();
 
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDate(date);
@@ -102,21 +94,6 @@ export function BookingSheet({
     await stripe.redirectToCheckout({
       sessionId: checkoutSessionResult.data.id,
     });
-
-    // const result = await executeAsync({
-    //   serviceId: service.id,
-    //   date,
-    // });
-
-    // if (result?.validationErrors || result?.serverError) {
-    //   toast.error(result.validationErrors?._errors?.[0]);
-    //   return;
-    // }
-
-    // toast.success("Agendamento criado com sucesso!");
-    // setSelectedDate(undefined);
-    // setSelectedTime(undefined);
-    // onClose();
   };
 
   return (

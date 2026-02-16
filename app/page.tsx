@@ -14,6 +14,7 @@ import {
 } from "./_components/ui/page";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import QuickSearchButtons from "./_components/quick-search-buttons";
 
 export default async function Home() {
   const session = await auth.api.getSession({
@@ -53,6 +54,11 @@ export default async function Home() {
       <Header />
       <PageContainer>
         <SearchInput />
+        <PageSection>
+          <PageSectionScroller>
+            <QuickSearchButtons />
+          </PageSectionScroller>
+        </PageSection>
         <Image
           src={banner}
           alt="Banner Barber Shop AI"

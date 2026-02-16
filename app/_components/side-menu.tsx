@@ -7,14 +7,17 @@ import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { Separator } from "./ui/separator";
 import { Button } from "./ui/button";
 import { SheetClose, SheetTitle } from "./ui/sheet";
+import Link from "next/link";
 
 const categories = [
   "Cabelo",
   "Barba",
   "Acabamento",
-  "Sombrancelha",
-  "Massagem",
+  "Sobrancelha",
+  "Pézinho",
+  "Progressiva",
   "Hidratação",
+  "Massagem",
 ];
 
 export function SideMenu() {
@@ -124,9 +127,10 @@ export function SideMenu() {
             key={category}
             variant="ghost"
             className="h-10 justify-start rounded-full px-5 py-3"
-            disabled
           >
-            <span className="text-sm font-medium">{category}</span>
+            <Link href={`/barbershops?search=${encodeURIComponent(category)}`}>
+              <span className="text-sm font-medium">{category}</span>
+            </Link>
           </Button>
         ))}
       </div>
