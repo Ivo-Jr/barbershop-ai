@@ -20,11 +20,11 @@ Tecnologias utilizadas:
 - SEMPRE use componentes que estão em @app/\_components/ui/page.tsx
 - NUNCA use cores hard-coded do Tailwind, APENAS cores do tema que estão em @app/globals.css
 - Use a página que está em @app/page.tsx como referencia para criar e organizar o código;
-- **SEMPRE** use o MCP dp Cpntext7 para buscar documentações, sites e APIs.
+- **SEMPRE** use o MCP dp Context7 para buscar documentações, sites e APIs.
 - **SEMPRE** use os componentes @app/\_components/footer.tsx e @app/\_components/header.tsx na hora de criar headers e footers. **NUNCA** os crie manualemnte.
 - Evite ao máximo duplicidade de código. Ao repetir um código, crie componentes e/ ou funções utilitárias.
 - Ao usar o Figma MCP, **SEMPRE** seja 100% fiel ao Figma **CUSTE O QUE CUSTAR**
-- Todo scroll horizontal **DEVE SEMPRE** esconder a barra de sc roll usando className="[&::-webkit-scrollbar]:hidden"
+- Todo scroll horizontal **DEVE SEMPRE** esconder a barra de scroll usando className="[&::-webkit-scrollbar]:hidden"
 
 ## Server Actions
 
