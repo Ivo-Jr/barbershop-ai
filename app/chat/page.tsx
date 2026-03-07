@@ -13,7 +13,7 @@ import { ChatInputBar } from "./_components/chat-input-bar";
 const ChatPage = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const { messages, sendMessage } = useChat({
+  const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({
       api: "/api/chat",
     }),
@@ -30,9 +30,15 @@ const ChatPage = () => {
 
       <section className="flex-1 overflow-y-auto pb-4 [&::-webkit-scrollbar]:hidden">
         <WelcomeMessage />
-        {messages.map((message) =>
+        {messages.map((message, i) =>
           message.role === "assistant" ? (
-            <AiMessage key={message.id} message={message} />
+            <AiMessage
+              key={message.id}
+              message={message}
+              isStreaming={
+                status === "streaming" && i === messages.length - 1
+              }
+            />
           ) : (
             <UserMessage key={message.id} message={message} />
           ),
