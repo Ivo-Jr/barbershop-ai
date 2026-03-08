@@ -1,6 +1,7 @@
+import { createBooking } from "@/app/_actions/create-booking";
 import { getDateAvailableTimeSlots } from "@/app/_actions/get-date-available-time-slots";
 import { prisma } from "@/lib/prisma";
-import { openai } from "@ai-sdk/openai";
+import { google } from "@ai-sdk/google";
 import { convertToModelMessages, stepCountIs, streamText, tool } from "ai";
 import { z } from "zod";
 
@@ -8,7 +9,7 @@ export const POST = async (req: Request) => {
   const { messages } = await req.json();
 
   const result = streamText({
-    model: openai("gpt-4o-mini"),
+    model: google("gemini-2.5-flash"),
     messages: await convertToModelMessages(messages),
     stopWhen: stepCountIs(10),
     system: `Você é o Aparatus AI, um assistente virtual de agendamento de barbearias
@@ -71,7 +72,7 @@ export const POST = async (req: Request) => {
           name: z.string().optional().describe("O nome opcional da barbearia."),
         }),
         execute: async ({ name }) => {
-          if (!name) {
+          if (!name?.trim()) {
             const barbershops = await prisma.barbershop.findMany({
               include: {
                 services: true,
@@ -81,20 +82,33 @@ export const POST = async (req: Request) => {
               name: barbershop.name,
               address: barbershop.address,
               services: barbershop.services.map((service) => ({
+                id: service.id,
                 name: service.name,
                 price: service.priceInCents / 100,
               })),
             }));
           }
-          const barbershop = await prisma.barbershop.findFirst({
+          const barbershops = await prisma.barbershop.findMany({
             where: {
               name: {
                 contains: name,
                 mode: "insensitive",
               },
             },
+            include: {
+              services: true,
+            },
           });
-          return barbershop;
+          return barbershops.map((barbershop) => ({
+            id: barbershop.id,
+            name: barbershop.name,
+            address: barbershop.address,
+            services: barbershop.services.map((service) => ({
+              id: service.id,
+              name: service.name,
+              price: service.priceInCents / 100,
+            })),
+          }));
         },
       }),
       getAvailableTimeSlotsBarbershop: tool({
@@ -119,6 +133,31 @@ export const POST = async (req: Request) => {
             barbershopId,
             date,
             availableTimeSlots: result.data,
+          };
+        },
+      }),
+      createBooking: tool({
+        description:
+          "Cria um agendamento para um serviço numa data e horario específicos.",
+        inputSchema: z.object({
+          serviceId: z.string().describe("O ID do serviço."),
+          date: z.string().describe("A data em formato YYYY-MM-DD."),
+        }),
+        execute: async ({ serviceId, date }) => {
+          const result = await createBooking({
+            serviceId,
+            date: new Date(date),
+          });
+          if (result.serverError || result.validationErrors) {
+            return {
+              error:
+                result.validationErrors?._errors?.[0] ||
+                "Erro ao criar agendamento.",
+            };
+          }
+          return {
+            success: true,
+            message: "Agendamento criado com sucesso.",
           };
         },
       }),
